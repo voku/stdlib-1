@@ -57,37 +57,46 @@ class StringsTest extends TestCase
 
     public function testIndex()
     {
-        $this->assertEquals(0, strings\index("foo", "foo"));
-        $this->assertEquals(-1, strings\index("foo", "bar"));
-        $this->assertEquals(1, strings\index("foo", "o"));
+        $this->assertSame(0, strings\index("foo", "foo"));
+        $this->assertSame(-1, strings\index("foo", "bar"));
+        $this->assertSame(1, strings\index("foo", "o"));
     }
 
     public function testJoin()
     {
-        $this->assertEquals("hello world", strings\join(["hello", "world"], " "));
-        $this->assertEquals("1+1", strings\join(["1", "1"], "+"));
+        $this->assertSame("hello world", strings\join(["hello", "world"], " "));
+        $this->assertSame("1+1", strings\join(["1", "1"], "+"));
     }
 
     public function testLastIndex()
     {
-        $this->assertEquals(3, strings\last_index("foofoo", "foo"));
-        $this->assertEquals(-1, strings\last_index("foo", "bar"));
-        $this->assertEquals(2, strings\last_index("foo", "o"));
+        $this->assertSame(3, strings\last_index("foofoo", "foo"));
+        $this->assertSame(-1, strings\last_index("foo", "bar"));
+        $this->assertSame(2, strings\last_index("foo", "o"));
+        $this->assertSame(6, strings\last_index("κόσμε\xc2\xa0ό", "ό"));
     }
 
     public function testMap()
     {
-        $this->assertEquals(
+        $this->assertSame(
             "'Gjnf oevyyvt naq gur fyvgul tbcure...",
             strings\Map('str_rot13', "'Twas brillig and the slithy gopher...")
         );
     }
 
+    public function testMapUnicode()
+    {
+        $this->assertSame(
+            "κόσμε-öäü",
+            strings\Map('mb_strtolower', "Κόσμε-ÖÄÜ")
+        );
+    }
+    
     public function testRepeat()
     {
-        $this->assertEquals("foo", strings\repeat("foo", 1));
-        $this->assertEquals("foofoo", strings\repeat("foo", 2));
-        $this->assertEquals("", strings\repeat("foo", 0));
+        $this->assertSame("foo", strings\repeat("foo", 1));
+        $this->assertSame("foofoo", strings\repeat("foo", 2));
+        $this->assertSame("", strings\repeat("foo", 0));
 
         $this->expectException(\UnexpectedValueException::class);
         strings\repeat("foo", -1);
@@ -95,52 +104,54 @@ class StringsTest extends TestCase
 
     public function testReplace()
     {
-        $this->assertEquals("bar", strings\replace("foo", "foo", "bar"));
-        $this->assertEquals("bar", strings\replace("foo", "foo", "bar", 1));
-        $this->assertEquals("foo", strings\replace("foo", "foo", "bar", 0));
+        $this->assertSame("bar", strings\replace("foo", "foo", "bar"));
+        $this->assertSame("bar", strings\replace("foo", "foo", "bar", 1));
+        $this->assertSame("foo", strings\replace("foo", "foo", "bar", 0));
 
-        $this->assertEquals("barbarfoo", strings\replace("foofoofoo", "foo", "bar", 2));
-        $this->assertEquals("barbarbar", strings\replace("foofoofoo", "foo", "bar"));
+        $this->assertSame("barbarfoo", strings\replace("foofoofoo", "foo", "bar", 2));
+        $this->assertSame("barbarbar", strings\replace("foofoofoo", "foo", "bar"));
     }
 
     public function testSplit()
     {
-        $this->assertEquals(['a', 'b', 'c'], strings\split("a,b,c", ","));
-        $this->assertEquals(['', 'man ', 'plan ', 'canal panama'], strings\split("a man a plan a canal panama", "a "));
-        $this->assertEquals([' ', 'x', 'y', 'z', ' '], strings\split(" xyz ", ""));
-        $this->assertEquals([''], strings\split("", "Bernardo O'Higgins"));
+        $this->assertSame(['a', 'b', 'c'], strings\split("a,b,c", ","));
+        $this->assertSame(['', 'man ', 'plan ', 'canal panama'], strings\split("a man a plan a canal panama", "a "));
+        $this->assertSame([' ', 'x', 'y', 'z', ' '], strings\split(" xyz ", ""));
+        $this->assertSame([''], strings\split("", "Bernardo O'Higgins"));
 
-        $this->assertEquals(['a', 'b,c'], strings\split("a,b,c", ",", 2));
-        $this->assertEquals(['a', 'bc'], strings\split("abc", "", 2));
+        $this->assertSame(['a', 'b,c'], strings\split("a,b,c", ",", 2));
+        $this->assertSame(['a', 'bc'], strings\split("abc", "", 2));
     }
 
     public function testToLower()
     {
-        $this->assertEquals('foo', strings\to_lower('FOO'));
-        $this->assertEquals('foo', strings\to_lower('foo'));
+        $this->assertSame('foo', strings\to_lower('FOO'));
+        $this->assertSame('foo', strings\to_lower('foo'));
     }
 
     public function testToUpper()
     {
-        $this->assertEquals('FOO', strings\to_upper('FOO'));
-        $this->assertEquals('FOO', strings\to_upper('foo'));
+        $this->assertSame('FOO', strings\to_upper('FOO'));
+        $this->assertSame('FOO', strings\to_upper('foo'));
     }
 
     public function testTrim()
     {
-        $this->assertEquals('Hello, Gophers', strings\trim("¡¡¡Hello, Gophers!!!", "!¡"));
-        $this->assertEquals("xyz", strings\trim(" xyz "));
+        $this->assertSame('Hello, Gophers', strings\trim("¡¡¡Hello, Gophers!!!", "!¡"));
+        $this->assertSame("xyz", strings\trim(" xyz "));
+
+        $this->assertSame('κöäüσμε', strings\trim('κöäüσμε' . \html_entity_decode('&nbsp;', null, 'UTF-8')));
     }
 
     public function testTrimLeft()
     {
-        $this->assertEquals('Hello, Gophers!!!', strings\trim_left("¡¡¡Hello, Gophers!!!", "!¡"));
-        $this->assertEquals("xyz ", strings\trim_left(" xyz "));
+        $this->assertSame('Hello, Gophers!!!', strings\trim_left("¡¡¡Hello, Gophers!!!", "!¡"));
+        $this->assertSame("xyz ", strings\trim_left(" xyz "));
     }
 
     public function testTrimRight()
     {
-        $this->assertEquals('¡¡¡Hello, Gophers', strings\trim_right("¡¡¡Hello, Gophers!!!", "!¡"));
-        $this->assertEquals(" xyz", strings\trim_right(" xyz "));
+        $this->assertSame('¡¡¡Hello, Gophers', strings\trim_right("¡¡¡Hello, Gophers!!!", "!¡"));
+        $this->assertSame(" xyz", strings\trim_right(" xyz "));
     }
 }

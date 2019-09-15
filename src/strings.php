@@ -11,7 +11,7 @@ function compare(string $a, string $b) : int
 
 function contains(string $string, string $substring) : bool
 {
-    if (strlen($substring) === 0) {
+    if ($substring === '') {
         return true;
     }
 
@@ -20,7 +20,7 @@ function contains(string $string, string $substring) : bool
 
 function has_prefix(string $string, string $prefix) : bool
 {
-    if (strlen($prefix) === 0) {
+    if ($prefix === '') {
         return true;
     }
 
@@ -29,7 +29,7 @@ function has_prefix(string $string, string $prefix) : bool
 
 function has_suffix(string $string, string $suffix) : bool
 {
-    if (strlen($suffix) === 0) {
+    if ($suffix === '') {
         return true;
     }
 
@@ -54,7 +54,7 @@ function join(array $strings, string $separator) : string
 
 function last_index(string $string, string $substring) : int
 {
-    $pos = strrpos($string, $substring);
+    $pos = mb_strrpos($string, $substring);
 
     if ($pos === false) {
         return -1;
@@ -63,16 +63,46 @@ function last_index(string $string, string $substring) : int
     return $pos;
 }
 
-function map(callable $fn, string $string) : string
+function str_split(string $string, int $length = 1): array
 {
-    $len = strlen($string);
-    $new = "";
-
-    for ($i = 0; $i < $len; $i++) {
-        $new .= $fn($string[$i]);
+    if ($length <= 0) {
+        return [];
     }
 
-    return $new;
+    $i_max = mb_strlen($string);
+    if ($i_max <= 127) {
+        $ret = [];
+        for ($i = 0; $i < $i_max; ++$i) {
+            $ret[] = mb_substr($string, $i, 1);
+        }
+    } else {
+        $return_array = [];
+        preg_match_all('/./us', $string, $return_array);
+        $ret = $return_array[0] ?? [];
+    }
+
+    if ($length > 1) {
+        $ret = array_chunk($ret, $length);
+
+        return array_map(
+            static function (array &$item): string {
+                return implode('', $item);
+            },
+            $ret
+        );
+    }
+
+    return $ret;
+}
+
+function map(callable $fn, string $string) : string
+{
+    return implode(
+        array_map(
+            $fn,
+            str_split($string)
+        )
+    );
 }
 
 function repeat(string $string, int $count) : string
@@ -90,12 +120,13 @@ function replace(string $string, string $old, string $new, int $n = -1)
         return str_replace($old, $new, $string);
     }
 
-    return preg_replace('(' . preg_quote($old) . ')', $new, $string, $n);
+    /** @noinspection PregQuoteUsageInspection */
+    return preg_replace('(' . preg_quote($old) . ')u', $new, $string, $n);
 }
 
 function split(string $string, string $separator, int $limit = PHP_INT_MAX) : array
 {
-    if (strlen($separator) === 0) {
+    if ($separator === '') {
         $chars = str_split($string);
 
         if ($limit > count($chars)) {
@@ -121,9 +152,17 @@ function to_upper(string $string) : string
     return strtoupper($string);
 }
 
-function trim(string $string, string $mask = " \t\n\r\0\x0B")
+function trim(string $string, string $mask = null)
 {
-    return \trim($string, $mask);
+    if ($mask) {
+        /** @noinspection PregQuoteUsageInspection */
+        $mask = preg_quote($mask);
+        $pattern = "^[" . $mask . "]+|[" . $mask . "]+\$";
+    } else {
+        $pattern = '^[\\s]+|[\\s]+$';
+    }
+
+    return (string) mb_ereg_replace($pattern, '', $string);
 }
 
 function trim_left(string $string, string $mask = " \t\n\r\0\x0B")
